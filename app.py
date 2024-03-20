@@ -1,5 +1,3 @@
-from pathlib import Path
-import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from openai import OpenAI
@@ -36,9 +34,6 @@ def transcribe_audio():
 
             get_response(transcription.text)
 
-            # Assuming the response is a JSON string, parse it into a dictionary
-            # transcription_dict = json.loads(transcription)
-            # Access the transcription result
             return jsonify({"text": transcription.text}), 200
 
         except Exception as e:
@@ -50,8 +45,6 @@ def transcribe_audio():
 
 @app.route("/api/respond", methods=["POST"])
 def get_response(prompt):
-    # This is where you'll send the transcribed text to GPT-4 and get a response.
-    # Placeholder for GPT-4 interaction logic.
     client = OpenAI()
 
     completion = client.chat.completions.create(
@@ -72,9 +65,6 @@ def get_response(prompt):
 
 @app.route("/api/synthesize", methods=["POST"])
 def synthesize_audio(text):
-    # This is where you'll convert the GPT-4 text response to audio using TTS.
-    # Placeholder for TTS conversion logic.
-
     client = OpenAI()
 
     response = client.audio.speech.create(
