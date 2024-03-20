@@ -1,3 +1,4 @@
+from pathlib import Path
 import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -33,6 +34,8 @@ def transcribe_audio():
 
             print(f"Text: {transcription.text}")
 
+            get_response(transcription.text)
+
             # Assuming the response is a JSON string, parse it into a dictionary
             # transcription_dict = json.loads(transcription)
             # Access the transcription result
@@ -46,16 +49,42 @@ def transcribe_audio():
 
 
 @app.route("/api/respond", methods=["POST"])
-def get_response():
+def get_response(prompt):
     # This is where you'll send the transcribed text to GPT-4 and get a response.
     # Placeholder for GPT-4 interaction logic.
-    return jsonify({"response": "GPT-4 response here"}), 200
+    client = OpenAI()
+
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt},
+        ],
+    )
+
+    response = completion.choices[0].message.content
+    print(response)
+
+    synthesize_audio(response)
+
+    return jsonify({"response": response}), 200
 
 
 @app.route("/api/synthesize", methods=["POST"])
-def synthesize_audio():
+def synthesize_audio(text):
     # This is where you'll convert the GPT-4 text response to audio using TTS.
     # Placeholder for TTS conversion logic.
+
+    client = OpenAI()
+
+    response = client.audio.speech.create(
+        model="tts-1",
+        voice="alloy",
+        input=text,
+    )
+
+    response.stream_to_file("./audio/output.mp3")
+
     return jsonify({"audio_url": "URL to the synthesized audio"}), 200
 
 
