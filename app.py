@@ -1,52 +1,69 @@
 from flask import Flask, request, jsonify
+from flask import send_from_directory
 from flask_cors import CORS
+from flask_socketio import SocketIO, emit
 from openai import OpenAI
 from dotenv import load_dotenv
 from io import BytesIO
+import os
 
 load_dotenv()
 
 
+app = Flask(__name__)
+CORS(app)
+app.config["SECRET_KEY"] = "secret!"
+socketio = SocketIO(app, cors_allowed_origins="*")
 client = OpenAI()
 
 
-app = Flask(__name__)
-CORS(app)
+@socketio.on("connect")
+def test_connect():
+    print("Client connected.")
 
 
-@app.route("/api/transcribe", methods=["POST"])
-def transcribe_audio():
-    if "audio" in request.files:
-        audio_file = request.files["audio"]
-        try:
-            # Wrap the file content in a BytesIO object
-            audio_bytes_io = BytesIO(audio_file.read())
-
-            # Prepare the tuple (filename, file-like object, content_type)
-            file_tuple = ("audio.webm", audio_bytes_io, "audio/webm")
-
-            # Pass the tuple to the transcription API
-            transcription = client.audio.transcriptions.create(
-                model="whisper-1", file=file_tuple
-            )
-
-            print(f"Text: {transcription.text}")
-
-            get_response(transcription.text)
-
-            return jsonify({"text": transcription.text}), 200
-
-        except Exception as e:
-            print("An error occurred: ", str(e))
-            return jsonify({"error": "An error occurred during transcription"}), 500
-    else:
-        return jsonify({"error": "No audio file found in request"}), 400
+@socketio.on("disconnect")
+def test_disconnect():
+    print("Client disconnected.")
 
 
-@app.route("/api/respond", methods=["POST"])
+@app.route("/audio/<filename>")
+def serve_audio(filename):
+    return send_from_directory("static/audio", filename)
+
+
+@socketio.on("audio_data")
+def handle_audio(data):
+    # audio_file = data["audio"]
+    try:
+        print(type(data))
+        # Wrap the file content in a BytesIO object
+        audio_bytes_io = BytesIO(data)
+        print(type(audio_bytes_io))
+
+        # Prepare the tuple (filename, file-like object, content_type)
+        file_tuple = ("audio.webm", audio_bytes_io, "audio/webm")
+
+        # Pass the tuple to the transcription API
+        transcription = client.audio.transcriptions.create(
+            model="whisper-1", file=file_tuple
+        )
+
+        print(f"Text: {transcription.text}")
+        emit("transcription", {"text": transcription.text})
+
+        response = get_response(transcription.text)
+        emit("response", {"text": response})
+
+        audio_filename = "new_output.mp3"
+        audio_url = synthesize_audio(response, audio_filename)
+        emit("audio_url", {"url": audio_url})
+
+    except Exception as e:
+        print("An error occurred: ", str(e))
+
+
 def get_response(prompt):
-    client = OpenAI()
-
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -58,24 +75,21 @@ def get_response(prompt):
     response = completion.choices[0].message.content
     print(response)
 
-    synthesize_audio(response)
-
-    return jsonify({"response": response}), 200
+    return response
 
 
-@app.route("/api/synthesize", methods=["POST"])
-def synthesize_audio(text):
-    client = OpenAI()
-
-    response = client.audio.speech.create(
+def synthesize_audio(text, audio_filename):
+    audio = client.audio.speech.create(
         model="tts-1",
         voice="alloy",
         input=text,
     )
 
-    response.stream_to_file("./audio/output.mp3")
+    audio_url = os.path.join("static", "audio", "new_output.mp3")
+    audio.stream_to_file(audio_url)
+    print(type(audio), audio)
 
-    return jsonify({"audio_url": "URL to the synthesized audio"}), 200
+    return audio_url
 
 
 if __name__ == "__main__":

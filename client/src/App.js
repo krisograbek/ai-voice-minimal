@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import IconButton from '@mui/material/IconButton';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
 import { useAudioRecorder } from 'react-audio-voice-recorder';
+import { io } from "socket.io-client";
+
+const host = 'http://localhost:5000/'
+const socket = io(host)
+
 
 export default function App() {
   const {
@@ -12,27 +17,52 @@ export default function App() {
     recordingBlob,
     isRecording
   } = useAudioRecorder();
+  const [audioUrl, setAudioUrl] = useState('');
 
   const handleStopRecording = () => {
     stopRecording();
+
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
+    socket.on('connect', () => {
+      console.log('Connected to WebSocket server');
+    });
+
+    socket.on('transcription', (data) => {
+      console.log('Transcription:', data.text);
+      // Optionally update the UI to show the transcription
+    });
+
+    socket.on('response', (data) => {
+      console.log('Response Text:', data.text);
+      // Optionally update the UI to show the response text
+    });
+
+    socket.on('audio_url', (data) => {
+      setAudioUrl(host + data.url)
+      console.log('Received audio URL:', host + data.url);
+      // Handle playing the received audio URL here
+    });
+
+    return () => {
+      socket.off('connect');
+      socket.off('transcription');
+      socket.off('response');
+      socket.off('audio_url');
+    };
+  }, []);
+
+  useEffect(() => {
     if (recordingBlob) {
       console.log('Sending audio blob to the server', recordingBlob);
-      const formData = new FormData();
-      formData.append("audio", recordingBlob, "recording.webm");
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const arrayBuffer = event.target.result;
+        socket.emit('audio_data', arrayBuffer)
+      };
 
-      axios.post('http://localhost:5000/api/transcribe', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      }).then(response => {
-        console.log(response.data);
-        // Handle the response from the server here
-      }).catch(error => {
-        console.error('Error sending audio to the server:', error);
-      });
+      reader.readAsArrayBuffer(recordingBlob);
     }
   }, [recordingBlob]);
 
@@ -45,6 +75,7 @@ export default function App() {
       >
         {isRecording ? <StopIcon /> : <MicIcon />}
       </IconButton>
+      {audioUrl && <audio src={audioUrl} controls autoPlay />}
     </div>
   );
 }
