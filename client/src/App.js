@@ -67,13 +67,26 @@ export default function App() {
   }, [recordingBlob]);
 
   return (
-    <div>
+    <div
+      style={{
+        display: 'flex', // Enable flexbox
+        justifyContent: 'center', // Horizontally center the content
+        alignItems: 'center', // Vertically center the content
+        height: '100vh', // Make the div take up the full viewport height
+      }}
+    >
       <IconButton
+        sx={{
+          padding: '20px',
+          fontSize: '40px',
+          height: 'auto',
+          width: 'auto',
+        }}
         color="primary"
         onClick={isRecording ? handleStopRecording : startRecording}
         aria-label={isRecording ? "Stop recording" : "Start recording"}
       >
-        {isRecording ? <StopIcon /> : <MicIcon />}
+        {isRecording ? <StopIcon sx={{ fontSize: '15rem' }} /> : <MicIcon sx={{ fontSize: '15rem' }} />}
       </IconButton>
       {audioUrl && <audio src={audioUrl} controls autoPlay />}
     </div>

@@ -67,7 +67,10 @@ def get_response(prompt):
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
+            {
+                "role": "system",
+                "content": "You are a helpful assistant. Be extremely concise.",
+            },
             {"role": "user", "content": prompt},
         ],
     )
