@@ -1,4 +1,4 @@
-# Flask + ReactJS Full Stack Application
+# AI Voice Assistant (Flask + ReactJS)
 
 This application utilizes OpenAI's API to transcribe audio inputs from the user, generate text-based responses, and synthesize these responses back into audio. It features a ReactJS frontend for user interaction and a Flask backend for handling the audio processing and API communication.
 
