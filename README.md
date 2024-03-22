@@ -2,6 +2,10 @@
 
 This application utilizes OpenAI's API to transcribe audio inputs from the user, generate text-based responses, and synthesize these responses back into audio. It features a ReactJS frontend for user interaction and a Flask backend for handling the audio processing and API communication.
 
+## Demo of the App
+
+[![Video](https://github.com/krisograbek/ai-voice-minimal/assets/48050596/4ac20f8f-d4cf-490a-97e4-57ee75d6cc5a)](https://github.com/krisograbek/ai-voice-minimal/assets/48050596/a0a3c8b8-fac6-4d83-822f-a2b1e919d22b)
+
 ## Prerequisites
 
 Before you begin, ensure you have met the following requirements:
