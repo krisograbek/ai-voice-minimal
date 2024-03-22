@@ -18,16 +18,15 @@ Before you begin, ensure you have met the following requirements:
 Clone this repository to your local machine:
 
 ```bash
-git clone https://github.com/yourusername/your-repo-name.git
-cd your-repo-name
+git clone https://github.com/krisograbek/ai-voice-minimal
+cd ai-voice-minimal
 ```
 
 ## Setting up the Backend
 
-Navigate to the backend directory and create a virtual environment:
+Create a virtual environment in the back-end directory:
 
 ```bash
-cd path/to/your/backend
 python -m venv venv
 ```
 
@@ -48,7 +47,7 @@ pip install -r requirements.txt
 Navigate to the frontend directory:
 
 ```bash
-cd path/to/your/frontend
+cd client
 ```
 
 **Install the required npm packages:**
