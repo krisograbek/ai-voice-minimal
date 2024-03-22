@@ -18,6 +18,8 @@ export default function App() {
     isRecording
   } = useAudioRecorder();
   const [audioUrl, setAudioUrl] = useState('');
+  const [audioKey, setAudioKey] = useState(Date.now()); // for updating the audio key
+
 
   const handleStopRecording = () => {
     stopRecording();
@@ -41,6 +43,7 @@ export default function App() {
 
     socket.on('audio_url', (data) => {
       setAudioUrl(host + data.url)
+      setAudioKey(Date.now()); // Update the key to force refresh
       console.log('Received audio URL:', host + data.url);
       // Handle playing the received audio URL here
     });
@@ -52,6 +55,12 @@ export default function App() {
       socket.off('audio_url');
     };
   }, []);
+
+  useEffect(() => {
+    if (isRecording) {
+      setAudioUrl('')
+    }
+  }, [isRecording])
 
   useEffect(() => {
     if (recordingBlob) {
@@ -69,10 +78,10 @@ export default function App() {
   return (
     <div
       style={{
-        display: 'flex', // Enable flexbox
-        justifyContent: 'center', // Horizontally center the content
-        alignItems: 'center', // Vertically center the content
-        height: '100vh', // Make the div take up the full viewport height
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
       }}
     >
       <IconButton
@@ -88,7 +97,7 @@ export default function App() {
       >
         {isRecording ? <StopIcon sx={{ fontSize: '15rem' }} /> : <MicIcon sx={{ fontSize: '15rem' }} />}
       </IconButton>
-      {audioUrl && <audio src={audioUrl} controls autoPlay />}
+      {audioUrl && <audio key={audioKey} src={audioUrl} controls autoPlay />}
     </div>
   );
 }

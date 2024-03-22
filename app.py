@@ -6,6 +6,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from io import BytesIO
 import os
+from datetime import datetime
 
 load_dotenv()
 
@@ -15,16 +16,6 @@ CORS(app)
 app.config["SECRET_KEY"] = "secret!"
 socketio = SocketIO(app, cors_allowed_origins="*")
 client = OpenAI()
-
-
-@socketio.on("connect")
-def test_connect():
-    print("Client connected.")
-
-
-@socketio.on("disconnect")
-def test_disconnect():
-    print("Client disconnected.")
 
 
 @app.route("/audio/<filename>")
@@ -55,7 +46,7 @@ def handle_audio(data):
         response = get_response(transcription.text)
         emit("response", {"text": response})
 
-        audio_filename = "new_output.mp3"
+        audio_filename = datetime.now().strftime("%Y%m%d_%H%M%S") + ".mp3"
         audio_url = synthesize_audio(response, audio_filename)
         emit("audio_url", {"url": audio_url})
 
@@ -88,11 +79,21 @@ def synthesize_audio(text, audio_filename):
         input=text,
     )
 
-    audio_url = os.path.join("static", "audio", "new_output.mp3")
+    audio_url = os.path.join("static", "audio", audio_filename)
     audio.stream_to_file(audio_url)
     print(type(audio), audio)
 
     return audio_url
+
+
+@socketio.on("connect")
+def test_connect():
+    print("Client connected.")
+
+
+@socketio.on("disconnect")
+def test_disconnect():
+    print("Client disconnected.")
 
 
 if __name__ == "__main__":
